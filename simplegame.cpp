@@ -30,11 +30,11 @@ class Hero
 public:
     int id, hp, damage;
     string name;
-    Hero(int t_id, string t_name)
+    Hero(int t_id, int t_hp, int t_damage, string t_name)
     {
         id = t_id;
-        hp = rand() % 1000;
-        damage = rand() % 300;
+        hp = t_hp;
+        damage = t_damage;//rand() % 300;
         name = t_name;
     }
     Hero()
@@ -90,7 +90,7 @@ public:
     
     Hero CreateHero(int a_id)
     {
-        Hero hero = Hero(a_id, arr_name[a_id]);
+        Hero hero = Hero(a_id, rand() % 1000, rand() % 305, arr_name[a_id]);
         return hero;
     };
     
@@ -170,14 +170,35 @@ public:
 
 class Sesion
 {
-private:
+public:
     bool startTime;
     Team teamOne, teamTwo;
     string winner;
-public:
+    int teamOneHP = 0, teamTwoHP = 0, teamOneDm = 0, teamTwoDm = 0;
+    Sesion (Team team1,Team team2)
+    {
+        teamOne = team1;
+        teamTwo = team2;
+    }
     void CalculateWinner()
     {
-
+        for (int i = 0; i < 5; i++)
+        {
+            teamOneHP += teamOne.h_list[i].hp;
+            teamTwoHP += teamTwo.h_list[i].hp;
+            teamOneDm += teamOne.h_list[i].damage;
+            teamTwoDm += teamTwo.h_list[i].damage;
+        }
+        cout << "Team "<< teamOne.name <<" skill\nHP: " << teamOneHP << "\tDamage: " << teamOneDm << endl;
+        cout << "Team "<< teamTwo.name <<" skill\nHP: " << teamTwoHP << "\tDamage: " << teamTwoDm << endl;
+        if ((teamOneHP - teamTwoDm) > (teamTwoHP - teamOneDm))
+        {
+            cout << "Team " << teamOne.name << " win";
+        }
+        else
+        {
+            cout << "Team " << teamTwo.name << " win";
+        }
     }
 };
 
@@ -198,8 +219,10 @@ int main()
 {
     TeamManager teamone;
     TeamManager teamtwo;
-    teamone.GetTeamInfo(teamone.GenereteNewTeam(1, "Hyper"));
+    Sesion ses = Sesion(teamone.GenereteNewTeam(1, "Hyper"), teamtwo.GenereteNewTeam(2, "Loper"));
+    teamone.GetTeamInfo(ses.teamOne);
     cout << endl;
-    teamtwo.GetTeamInfo(teamtwo.GenereteNewTeam(2, "Loper"));
+    teamone.GetTeamInfo(ses.teamTwo);
+    ses.CalculateWinner();
 
 }
