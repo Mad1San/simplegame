@@ -1,6 +1,9 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
+#include <tuple>
+#include <list>
+#include <array>
 #include <ctime>
 #include <cstdlib>
 
@@ -17,11 +20,10 @@ public:
         rank = rand() % 100;
         name = t_name;
     }
-    Player()
-    {
-        id = 0;
-        rank = 0;
-        name = "name";
+    Player(){}
+
+    friend bool operator== (const Player& c1, const Player& c2) {
+        return c1.id == c2.id;
     }
 
 };
@@ -36,15 +38,13 @@ public:
     {
         id = t_id;
         hp = t_hp;
-        damage = t_damage;//rand() % 300;
+        damage = t_damage;
         name = t_name;
     }
-    Hero()
-    {
-        id = 0;
-        hp = 0;
-        damage = 0;
-        name = "name";
+    Hero(){}
+    
+    friend bool operator== (const Hero& c1, const Hero& c2) {
+        return c1.id == c2.id;
     }
     
 };
@@ -52,28 +52,44 @@ public:
 
 class PlayerManager 
 {
+private:
+    list<Player> m_playerList;
+
 public:
-    string arr_name[10]{ "W1zarD", "AnGeL", "Haker", "DoNaT1k", "В_КеДАхХх", "ShOoTeR", "FeNiKs", "3JIou_4uTeP", "4eJIoBeK", "4eByRaShKa"};
     
-    Player CreatePlayer(int a_id)
+    void CreatePlayer(int p_id, string p_name)
     {
-        Player player = Player(a_id, arr_name[a_id]);
-        return player;
+        Player player = Player(p_id, p_name);
+        m_playerList.push_back(player);
     }
 
-    void GetPlayerByName()
+    Player GetPlayerByName(string p_name)
     {
-
+        for (auto player : m_playerList)
+        {
+            if (p_name == player.name) return player;
+        }
     }
 
-    void GetPlayerById()
+    Player GetPlayerById(int p_id)
     {
-
+        for(auto player: m_playerList)
+        {
+            if (p_id == player.id) return player;
+        }
     }
 
-    void DeletePlayer()
+    list<Player> GetPlayerList()
     {
+        return m_playerList;
+    }
 
+    void DeletePlayer(int p_id)
+    {
+        for (auto player : m_playerList)
+        {
+            if (p_id == player.id) m_playerList.remove(player);
+        }
     }
 
     void ShowPlayerInfo(Player player)
@@ -82,36 +98,50 @@ public:
     }
 
 
-
 };
 
 class HeroManeger
 {
+private:
+    list<Hero> m_heroList;
 public:
-    string arr_name[10]{ "Noah", "Liam", "Mason", "Jacob", "William", "Ethan", "Michael", "Alex", "James", "Daniel" };
     
-    Hero CreateHero(int a_id)
+    void CreateHero(int h_id, string h_name)
     {
-        
-        Hero hero = Hero(a_id, rand() % 1000, rand() % 305, arr_name[a_id]);
-        return hero;
+        Hero hero = Hero(h_id, rand() % 1000, rand() % 305, h_name);
+        m_heroList.push_back(hero);
     };
     
 
-    void GetHeroByName()
+    Hero GetHeroByName(string h_name)
     {
-
+        for (auto hero : m_heroList)
+        {
+            if (h_name == hero.name) return hero;
+        }
     }
 
-    void GetHeroById()
+    Hero GetHeroById(int h_id)
     {
-
+        for (auto hero : m_heroList)
+        {
+            if (h_id == hero.id) return hero;
+        }
     }
 
-    void DeleteHero()
+    list<Hero> GetHeroList()
     {
-
+        return m_heroList;
     }
+
+    void DeleteHero(int h_id)
+    {
+        for (auto hero : m_heroList)
+        {
+            if (h_id == hero.id) m_heroList.remove(hero);
+        }
+    }
+
 
     void ShowHeroInfo(Hero hero)
     {
@@ -123,28 +153,13 @@ public:
 class Team 
 { 
 public:
+    array<tuple<Player,Hero>,5> team;
     string name;
-    vector<Player>p_list;
-    vector<Hero>h_list;
-    int i, i_t;
-    Team(int t_call, string t_name) {
+
+    Team(string t_name, array<tuple<Player, Hero>, 5> t_team) {
         name = t_name;
-        PlayerManager player;
-        HeroManeger hero;
-        if (t_call == 1) {
-            i = 0;
-            i_t = 5;
-        }
-        else {
-            i = 5;
-            i_t = 10;
-        }
-        for (i ; i < i_t; i++)
-        {
-            h_list.push_back(hero.CreateHero(i));
-            p_list.push_back(player.CreatePlayer(i));
-        }
-    
+        team = t_team;
+
     };
     Team() {
         name = "None";
@@ -156,120 +171,132 @@ public:
 class TeamManager
 {
 public:
-    Team GenereteNewTeam(int call,string call_name)
+    Team GenereteNewTeam(list<Player> &t_playerList, list<Hero> &t_heroList)
     {
-        Team team = Team(call,call_name);
+        array<tuple<Player, Hero>, 5> teamTuple;
+
+        string name;
+        cout << "say name: ";
+        cin >> name;
+        for (int i = 0; i < 5; i++)
+        {
+            Player playerTemp;
+            Hero heroTemp;
+            int index = rand() % t_playerList.size(), couter = 0;
+            for(auto player :t_playerList)
+            {
+                if (index == couter)
+                {
+                    playerTemp = player;
+                    break;
+                }
+                couter++;
+            }
+            couter = 0;
+            index = rand() % t_heroList.size();
+            for (auto hero : t_heroList)
+            {
+                if (index == couter)
+                {
+                    heroTemp = hero;
+                    break;
+                }
+                couter++;
+            }
+           
+            teamTuple[i] = tuple<Player, Hero>(playerTemp,heroTemp);
+            t_heroList.remove(heroTemp);
+            t_playerList.remove(playerTemp);
+
+        }
+
+        Team team = Team(name, teamTuple);
         return team;
     }
 
-    void GetTeamInfo(Team team)
+    void GetTeamInfo(Team &team)
     {
         cout << "Team name: " << team.name << endl;
+
         for (int i = 0; i < 5; i++)
-            cout << "Player name:" << team.p_list[i].name << "\tRank: "<< team.p_list[i].rank <<"\tHero: "<< team.h_list[i].name<<"\tHP: "<< team.h_list[i].hp << "\tDamage: "<< team.h_list[i].damage <<endl;
+            cout << "Player name:" << get<0>(team.team[i]).name << "\tRank: " << get<0>(team.team[i]).rank << "\tHero: " << get<1>(team.team[i]).name << "\tHP: " << get<1>(team.team[i]).hp << "\tDamage: " << get<1>(team.team[i]).damage << endl;
     }
 
 };
 
-class Sesion
+class Session
 {
 public:
     bool startTime = true;
-    Team teamOne, teamTwo;
-    string winner;
-    int teamOneHP = 0, teamTwoHP = 0, teamOneDm = 0, teamTwoDm = 0, t_one_score = 0, t_two_score = 0;
-    Sesion (Team team1,Team team2)
+    Team teamOne, teamTwo, winner;
+
+    Session (Team &team1,Team &team2)
     {
         teamOne = team1;
         teamTwo = team2;
     }
-    void CalculateWinner()
+    Team CalculateWinner()
     {
+        int teamOneHP = 0, teamTwoHP = 0, teamOneDm = 0, teamTwoDm = 0;
         for (int i = 0; i < 5; i++)
         {
-            teamOneHP += teamOne.h_list[i].hp;
-            teamTwoHP += teamTwo.h_list[i].hp;
-            teamOneDm += teamOne.h_list[i].damage;
-            teamTwoDm += teamTwo.h_list[i].damage;
+            teamOneHP += get<1>(teamOne.team[i]).hp;
+            teamTwoHP += get<1>(teamTwo.team[i]).hp;
+            teamOneDm += get<1>(teamOne.team[i]).damage;
+            teamTwoDm += get<1>(teamTwo.team[i]).damage;
         }
         cout << "Team "<< teamOne.name <<" skill\nHP: " << teamOneHP << "\tDamage: " << teamOneDm << endl;
         cout << "Team "<< teamTwo.name <<" skill\nHP: " << teamTwoHP << "\tDamage: " << teamTwoDm << endl;
         if ((teamOneHP - teamTwoDm) > (teamTwoHP - teamOneDm))
         {
-            winner = teamOne.name;
-            t_one_score += 25;
-            t_two_score -= 25;
+            winner = teamOne;
         }
         else
         {
-            winner = teamTwo.name;
-            t_two_score += 25;
-            t_one_score -= 25;
-        }     
-    }
-    Sesion(){};
-};
-
-class Result
-{
-public:
-    string team_one, team_second, winner;
-    int o_score, s_score;
-    Result(string t_team_one,string t_team_second,string t_winner,int t_o_score,int t_s_score)
-    {
-        team_one = t_team_one;
-        team_second = t_team_second;
-        winner = t_winner;
-        o_score = t_o_score;
-        s_score = t_s_score;
-    };
-    Result() {}
-};
-
-class GameManager : Sesion 
-{
-public:
-    vector<Result> games;
-    TeamManager teamone, teamtwo;
-    Result res;
-    char comm;
-    string teamName;
-    int sc = 0 , scc = 0;
-    void PerformGameSesion()
-    {
-        cout << "Say your team name:";
-        cin >> teamName;
-        while (startTime)
-        {
-            Sesion ses = Sesion(teamone.GenereteNewTeam(1, teamName), teamtwo.GenereteNewTeam(2, "Loper"));
-            teamone.GetTeamInfo(ses.teamOne);
-            cout << endl;
-            teamone.GetTeamInfo(ses.teamTwo);
-            ses.CalculateWinner();
-            cout << "Winer " << ses.winner << endl;
-            res = Result(ses.teamOne.name, ses.teamTwo.name, ses.winner , ses.t_one_score, ses.t_two_score);
-            games.push_back(res);
-            cout << "\nSay 'q' to Quit\n";
-            cin >> comm;
-            if (comm == 'q') startTime = false;
-            if (comm == 'r') {
-                for (auto j : games) {
-                    cout << "Team one: " << j.team_one << "\tTeam two: " << j.team_second << "\tWinner: " << j.winner << "\tScore: " << j.o_score << " " << j.s_score << endl;
-                    if (j.team_second == ses.teamTwo.name) { sc += j.s_score;}
-                    if (j.team_one == ses.teamOne.name) { scc += j.o_score; }
-                }
-            }
-            cout << "Team " << ses.teamOne.name << " score: " << scc << "\nTeam " << ses.teamTwo.name << " score: " <<sc<<endl;;
+            winner = teamTwo;
         }
+        return winner; 
     }
+    Session(){};
+};
+
+
+class GameManager 
+{
+private:
+    list<Session> gameSession;
+public:
     GameManager(){};
+    void PerformGameSession(list<Player> _pllst, list<Hero> _hrlst)
+    {
+        TeamManager team;
+        Team teamOne = team.GenereteNewTeam(_pllst, _hrlst);
+        team.GetTeamInfo(teamOne);
+        Team teamTwo = team.GenereteNewTeam(_pllst, _hrlst);
+        team.GetTeamInfo(teamTwo);
+        Session session = Session(teamOne, teamTwo);
+        cout << "Winner: " << session.CalculateWinner().name << endl;
+        gameSession.push_back(session);
+
+    }
 };
 
 
 int main()
-
 {
     srand(time(NULL));
+    string arr_nameHero[10]{ "Noah", "Liam", "Mason", "Jacob", "William", "Ethan", "Michael", "Alex", "James", "Daniel" };
+    string arr_namePlayer[10]{ "W1zarD", "AnGeL", "Haker", "DoNaT1k", "Stalin_USSR", "ShOoTeR", "FeNiKs", "3JIou_4uTeP", "cheJIoBeK", "cheByRaShKa" };
+    HeroManeger h_man;
+    PlayerManager p_man;
+    for(int i = 0; i < 10; i++)
+    {
+        p_man.CreatePlayer(i , arr_namePlayer[i]);
+        h_man.CreateHero(i , arr_nameHero[i]);
+    }
     GameManager game;
-    game.PerformGameSesion();
+    while (true)
+    {
+        game.PerformGameSession(p_man.GetPlayerList(), h_man.GetHeroList());
+    }
 }
