@@ -1,6 +1,8 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
+#include <ctime>
+#include <cstdlib>
 
 using namespace std;
 
@@ -90,6 +92,7 @@ public:
     
     Hero CreateHero(int a_id)
     {
+        
         Hero hero = Hero(a_id, rand() % 1000, rand() % 305, arr_name[a_id]);
         return hero;
     };
@@ -171,10 +174,10 @@ public:
 class Sesion
 {
 public:
-    bool startTime;
+    bool startTime = true;
     Team teamOne, teamTwo;
     string winner;
-    int teamOneHP = 0, teamTwoHP = 0, teamOneDm = 0, teamTwoDm = 0;
+    int teamOneHP = 0, teamTwoHP = 0, teamOneDm = 0, teamTwoDm = 0, t_one_score = 0, t_two_score = 0;
     Sesion (Team team1,Team team2)
     {
         teamOne = team1;
@@ -193,36 +196,80 @@ public:
         cout << "Team "<< teamTwo.name <<" skill\nHP: " << teamTwoHP << "\tDamage: " << teamTwoDm << endl;
         if ((teamOneHP - teamTwoDm) > (teamTwoHP - teamOneDm))
         {
-            cout << "Team " << teamOne.name << " win";
+            winner = teamOne.name;
+            t_one_score += 25;
+            t_two_score -= 25;
         }
         else
         {
-            cout << "Team " << teamTwo.name << " win";
-        }
+            winner = teamTwo.name;
+            t_two_score += 25;
+            t_one_score -= 25;
+        }     
     }
+    Sesion(){};
 };
 
-class GameManager
+class Result
 {
 public:
+    string team_one, team_second, winner;
+    int o_score, s_score;
+    Result(string t_team_one,string t_team_second,string t_winner,int t_o_score,int t_s_score)
+    {
+        team_one = t_team_one;
+        team_second = t_team_second;
+        winner = t_winner;
+        o_score = t_o_score;
+        s_score = t_s_score;
+    };
+    Result() {}
+};
+
+class GameManager : Sesion 
+{
+public:
+    vector<Result> games;
+    TeamManager teamone, teamtwo;
+    Result res;
+    char comm;
+    string teamName;
+    int sc = 0 , scc = 0;
     void PerformGameSesion()
     {
-
-
+        cout << "Say your team name:";
+        cin >> teamName;
+        while (startTime)
+        {
+            Sesion ses = Sesion(teamone.GenereteNewTeam(1, teamName), teamtwo.GenereteNewTeam(2, "Loper"));
+            teamone.GetTeamInfo(ses.teamOne);
+            cout << endl;
+            teamone.GetTeamInfo(ses.teamTwo);
+            ses.CalculateWinner();
+            cout << "Winer " << ses.winner << endl;
+            res = Result(ses.teamOne.name, ses.teamTwo.name, ses.winner , ses.t_one_score, ses.t_two_score);
+            games.push_back(res);
+            cout << "\nSay 'q' to Quit\n";
+            cin >> comm;
+            if (comm == 'q') startTime = false;
+            if (comm == 'r') {
+                for (auto j : games) {
+                    cout << "Team one: " << j.team_one << "\tTeam two: " << j.team_second << "\tWinner: " << j.winner << "\tScore: " << j.o_score << " " << j.s_score << endl;
+                    if (j.team_second == ses.teamTwo.name) { sc += j.s_score;}
+                    if (j.team_one == ses.teamOne.name) { scc += j.o_score; }
+                }
+            }
+            cout << "Team " << ses.teamOne.name << " score: " << scc << "\nTeam " << ses.teamTwo.name << " score: " <<sc<<endl;;
+        }
     }
-
+    GameManager(){};
 };
 
 
 int main()
 
 {
-    TeamManager teamone;
-    TeamManager teamtwo;
-    Sesion ses = Sesion(teamone.GenereteNewTeam(1, "Hyper"), teamtwo.GenereteNewTeam(2, "Loper"));
-    teamone.GetTeamInfo(ses.teamOne);
-    cout << endl;
-    teamone.GetTeamInfo(ses.teamTwo);
-    ses.CalculateWinner();
-
+    srand(time(NULL));
+    GameManager game;
+    game.PerformGameSesion();
 }
