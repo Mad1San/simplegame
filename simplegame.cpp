@@ -14,13 +14,17 @@ class Player
 public:
     int id, rank;
     string name;
-    Player(int t_id, string t_name)
+    Player(int t_id, int t_rank, string t_name)
     {
         id = t_id;
-        rank = rand() % 100;
+        rank = t_rank;
         name = t_name;
     }
-    Player(){}
+    Player() {
+        id = 0;
+        rank = 0;
+        name = "name";
+    }
 
     friend bool operator== (const Player& c1, const Player& c2) {
         return c1.id == c2.id;
@@ -41,7 +45,12 @@ public:
         damage = t_damage;
         name = t_name;
     }
-    Hero(){}
+    Hero(){
+        id = 0;
+        hp = 0;
+        damage = 0;
+        name = "name";
+    }
     
     friend bool operator== (const Hero& c1, const Hero& c2) {
         return c1.id == c2.id;
@@ -57,9 +66,9 @@ private:
 
 public:
     
-    void CreatePlayer(int p_id, string p_name)
+    void CreatePlayer(int p_id,int p_rank, string p_name)
     {
-        Player player = Player(p_id, p_name);
+        Player player = Player(p_id, p_rank, p_name);
         m_playerList.push_back(player);
     }
 
@@ -91,7 +100,36 @@ public:
             if (p_id == player.id) m_playerList.remove(player);
         }
     }
+    
+    void UpPlayerRank(int p_id)
+    {
+        for (auto player : m_playerList)
+        {
+            if (p_id == player.id)
+            {
+                m_playerList.remove(player);
+                player.rank = player.rank + 25;
+                m_playerList.push_back(player);
+                break;
+            }
 
+        }
+    }
+
+    void DownPlayerRank(int p_id)
+    {
+        for (auto player : m_playerList)
+        {
+            if (p_id == player.id)
+            {
+                m_playerList.remove(player);
+                player.rank = player.rank - 25;
+                m_playerList.push_back(player);
+                break;
+            }
+
+        }
+    }
     void ShowPlayerInfo(Player player)
     {
         cout << player.id + 1 << "\t" << player.name << "\t" << player.rank << endl;
@@ -221,14 +259,22 @@ public:
         for (int i = 0; i < 5; i++)
             cout << "Player name:" << get<0>(team.team[i]).name << "\tRank: " << get<0>(team.team[i]).rank << "\tHero: " << get<1>(team.team[i]).name << "\tHP: " << get<1>(team.team[i]).hp << "\tDamage: " << get<1>(team.team[i]).damage << endl;
     }
-
+    list<int> GetIdWinnerPlayer(Team& team)
+    {
+        list<int> playerId;
+        for (int i = 0; i < 5; i++)
+        {
+            playerId.push_back(get<0>(team.team[i]).id);
+        }
+        return playerId;
+    }
 };
 
 class Session
 {
 public:
     bool startTime = true;
-    Team teamOne, teamTwo, winner;
+    Team teamOne, teamTwo, winner , loser;
 
     Session (Team &team1,Team &team2)
     {
@@ -250,13 +296,30 @@ public:
         if ((teamOneHP - teamTwoDm) > (teamTwoHP - teamOneDm))
         {
             winner = teamOne;
+            loser = teamTwo;
         }
         else
         {
             winner = teamTwo;
+            loser = teamOne;
         }
+        
         return winner; 
     }
+    void UpTeamRank(PlayerManager &managerPlayer)  
+    {
+        TeamManager managerTeam;
+
+        for (int i : managerTeam.GetIdWinnerPlayer(loser))
+        {
+            managerPlayer.DownPlayerRank(i);
+        }
+        for (int i : managerTeam.GetIdWinnerPlayer(winner))
+        {
+            managerPlayer.UpPlayerRank(i);
+        }
+    }
+
     Session(){};
 };
 
@@ -267,7 +330,7 @@ private:
     list<Session> gameSession;
 public:
     GameManager(){};
-    void PerformGameSession(list<Player> _pllst, list<Hero> _hrlst)
+    void PerformGameSession(list<Player> _pllst, list<Hero> _hrlst , PlayerManager &upplayer)
     {
         TeamManager team;
         Team teamOne = team.GenereteNewTeam(_pllst, _hrlst);
@@ -275,9 +338,15 @@ public:
         Team teamTwo = team.GenereteNewTeam(_pllst, _hrlst);
         team.GetTeamInfo(teamTwo);
         Session session = Session(teamOne, teamTwo);
-        cout << "Winner: " << session.CalculateWinner().name << endl;
+        Team winner = session.CalculateWinner();
+        session.UpTeamRank(upplayer);
+        cout << "Winner: " << winner.name  << endl;
         gameSession.push_back(session);
 
+    }
+    list<Session> GetSesion()
+    {
+        return gameSession;
     }
 };
 
@@ -291,12 +360,12 @@ int main()
     PlayerManager p_man;
     for(int i = 0; i < 10; i++)
     {
-        p_man.CreatePlayer(i , arr_namePlayer[i]);
+        p_man.CreatePlayer(i , 0, arr_namePlayer[i]);
         h_man.CreateHero(i , arr_nameHero[i]);
     }
     GameManager game;
     while (true)
     {
-        game.PerformGameSession(p_man.GetPlayerList(), h_man.GetHeroList());
+        game.PerformGameSession(p_man.GetPlayerList(), h_man.GetHeroList(), p_man);
     }
 }
